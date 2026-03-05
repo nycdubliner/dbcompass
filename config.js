@@ -1,0 +1,2 @@
+window.DB_API_KEY = '4cb16cc25629379a9b853bdd1c55e7b86a203839';
+window.DEPLOY_TIME = '2026-03-05 23:24 UTC (Manual)';
