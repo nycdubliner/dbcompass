@@ -8,13 +8,15 @@ const getApiUrl = () => {
 let stations = [];
 let userCoords = null;
 let nearestStation = null;
-let deviceHeading = 0; // Filtered heading
-let targetRotation = 0; // The actual target rotation in degrees
-let currentRotation = 0; // The smoothed rotation for display
+let deviceHeading = 0; 
+let targetRotation = 0; 
+let currentRotation = 0; 
 let dataLoaded = false;
 
 // Stabilization settings
-const SMOOTHING_FACTOR = 0.15; // Lower = smoother but slower to react (0.0 to 1.0)
+const SMOOTHING_FACTOR = 0.08; // Lower = smoother (slower to "catch up")
+const HEADING_BUFFER_SIZE = 20; // Avg over last 20 readings (~1-2 seconds)
+let headingBuffer = [];
 
 // DOM Elements
 const needle = document.getElementById('compass-needle');
@@ -145,7 +147,25 @@ function handleOrientation(event) {
 
     if (heading === undefined || heading === null) return;
 
-    deviceHeading = heading;
+    // Add to circular buffer
+    headingBuffer.push(heading);
+    if (headingBuffer.length > HEADING_BUFFER_SIZE) {
+        headingBuffer.shift();
+    }
+
+    // Circular Averaging: Average the vectors (Sin/Cos) to avoid North (360/0) jump issues
+    let sumSin = 0;
+    let sumCos = 0;
+    
+    headingBuffer.forEach(h => {
+        const rad = h * Math.PI / 180;
+        sumSin += Math.sin(rad);
+        sumCos += Math.cos(rad);
+    });
+    
+    const avgRad = Math.atan2(sumSin, sumCos);
+    deviceHeading = (avgRad * 180 / Math.PI + 360) % 360;
+
     updateCompass();
 }
 
