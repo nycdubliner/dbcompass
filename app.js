@@ -8,7 +8,13 @@ const getApiUrl = () => {
 let stations = [];
 let userCoords = null;
 let nearestStation = null;
-let deviceHeading = 0; // Magnetic north heading
+let deviceHeading = 0; // Filtered heading
+let targetRotation = 0; // The actual target rotation in degrees
+let currentRotation = 0; // The smoothed rotation for display
+let dataLoaded = false;
+
+// Stabilization settings
+const SMOOTHING_FACTOR = 0.15; // Lower = smoother but slower to react (0.0 to 1.0)
 
 // DOM Elements
 const needle = document.getElementById('compass-needle');
@@ -59,6 +65,10 @@ startBtn.addEventListener('click', async () => {
 
         // Hide overlay
         overlay.classList.add('hidden');
+        needle.classList.add('loading'); // Start slow spin
+
+        // Start smoothing loop
+        requestAnimationFrame(updateSmoothing);
     } catch (err) {
         console.error('Initialization error:', err);
         alert('Failed to start. Please ensure you are on HTTPS and have granted permissions.');
@@ -103,6 +113,10 @@ function findNearestStation() {
     });
 
     nearestStation = closest;
+    if (!dataLoaded) {
+        dataLoaded = true;
+        needle.classList.remove('loading');
+    }
     updateUI(minDistance);
 }
 
@@ -143,10 +157,27 @@ function updateCompass() {
         nearestStation.position.lat, nearestStation.position.lng
     );
 
-    // The rotation of the needle should be: Bearing to target - Device Heading
-    // This makes the needle point at the target relative to where the phone is pointing.
-    const rotation = bearing - deviceHeading;
-    needle.style.transform = `rotate(${rotation}deg)`;
+    // Rotation is: Bearing to target - Device Heading
+    targetRotation = bearing - deviceHeading;
+}
+
+// Low-pass filter for smooth needle movement
+function updateSmoothing() {
+    if (dataLoaded) {
+        // Find the shortest path for rotation (handle 360-degree wrap)
+        let delta = targetRotation - currentRotation;
+        
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
+
+        // Apply smoothing
+        currentRotation += delta * SMOOTHING_FACTOR;
+        
+        // Update needle
+        needle.style.transform = `rotate(${currentRotation}deg)`;
+    }
+
+    requestAnimationFrame(updateSmoothing);
 }
 
 // --- Math Utilities ---
