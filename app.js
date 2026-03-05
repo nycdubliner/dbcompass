@@ -184,7 +184,10 @@ function getBearing(lat1, lon1, lat2, lon2) {
 
 // Set deployment timestamp on load
 window.addEventListener('load', () => {
+    const deployEl = document.getElementById('deploy-time');
     if (window.DEPLOY_TIME) {
-        document.getElementById('deploy-time').innerText = `Last deployed: ${window.DEPLOY_TIME}`;
+        deployEl.innerText = `Last deployed: ${window.DEPLOY_TIME}`;
+    } else {
+        deployEl.innerText = 'Last deployed: Unknown (Check build status)';
     }
 });
