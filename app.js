@@ -180,3 +180,10 @@ function getBearing(lat1, lon1, lat2, lon2) {
 
     return (θ * 180 / Math.PI + 360) % 360; // range 0-360
 }
+
+// Set deployment timestamp on load
+window.addEventListener('load', () => {
+    if (window.DEPLOY_TIME) {
+        document.getElementById('deploy-time').innerText = `Last deployed: ${window.DEPLOY_TIME}`;
+    }
+});

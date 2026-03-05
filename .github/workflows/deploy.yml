@@ -10,9 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get current time
+        id: time
+        run: echo "deploy_time=$(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_OUTPUT
+
       - name: Create config.js
         run: |
           echo "window.DB_API_KEY = '${{ secrets.DB_API_KEY }}';" > config.js
+          echo "window.DEPLOY_TIME = '${{ steps.time.outputs.deploy_time }}';" >> config.js
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
