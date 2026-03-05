@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>dbcompass - Dublin Bikes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF?text=db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>dbcompass</h1>
+            <p id="status-text">Locating nearest station...</p>
+        </header>
+
+        <main>
+            <div id="compass-container">
+                <div id="compass-needle"></div>
+                <div id="distance-display">--m</div>
+            </div>
+
+            <div id="station-info" class="hidden">
+                <h2 id="station-name">Station Name</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="label">Bikes</span>
+                        <span id="bikes-count" class="value">--</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Stands</span>
+                        <span id="stands-count" class="value">--</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div id="permission-overlay">
+            <div class="modal">
+                <h2>Welcome to dbcompass</h2>
+                <p>To point you to the nearest Dublin Bikes stand, we need access to your location and device orientation.</p>
+                <button id="start-btn">Start Tracking</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Real-time data from JCDecaux</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
