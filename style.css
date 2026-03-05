@@ -34,21 +34,25 @@ body {
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
 }
 
 @media (max-width: 480px) {
     #app {
-        padding: 10px 0;
+        padding: 0;
+        max-width: 100%;
     }
     
     header {
-        padding: 0 20px;
-        margin-bottom: 1rem;
+        padding: 20px 20px 0 20px;
+        margin-bottom: 0.5rem;
     }
 
     #station-info {
         border-radius: 0 !important;
         margin-bottom: 0 !important;
+        border-top: 1px solid rgba(255,255,255,0.1);
     }
 
     footer {
