@@ -1,6 +1,7 @@
 // The API_KEY will be provided via a separate config.js or injected during build
 const getApiUrl = () => {
-    const key = window.DB_API_KEY || 'MISSING_KEY';
+    // Fallback to the user's provided key if the injected config is missing
+    const key = window.DB_API_KEY || '4cb16cc25629379a9b853bdd1c55e7b86a203839';
     return `https://api.jcdecaux.com/vls/v1/stations?contract=dublin&apiKey=${key}`;
 };
 
