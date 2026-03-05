@@ -33,6 +33,10 @@ const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', async () => {
     try {
+        // Show loading state immediately
+        overlay.classList.add('hidden');
+        needle.classList.add('loading');
+        
         // 1. Request Orientation Permission (iOS 13+)
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             const permission = await DeviceOrientationEvent.requestPermission();
@@ -64,10 +68,6 @@ startBtn.addEventListener('click', async () => {
         // 4. Fetch Station Data
         await fetchStations();
         setInterval(fetchStations, 30000); // Refresh every 30s
-
-        // Hide overlay
-        overlay.classList.add('hidden');
-        needle.classList.add('loading'); // Start slow spin
 
         // Start smoothing loop
         requestAnimationFrame(updateSmoothing);
