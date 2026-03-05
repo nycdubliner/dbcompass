@@ -21,6 +21,7 @@ let headingBuffer = [];
 
 // DOM Elements
 const needle = document.getElementById('compass-needle');
+const compassContainer = document.getElementById('compass-container');
 const distanceDisplay = document.getElementById('distance-display');
 const statusText = document.getElementById('status-text');
 const stationNameEl = document.getElementById('station-name');
@@ -37,6 +38,7 @@ startBtn.addEventListener('click', async () => {
         // Show loading state immediately
         overlay.classList.add('hidden');
         needle.classList.add('loading');
+        compassContainer.classList.add('loading');
         
         // Start distance counting-up effect
         let count = 1;
@@ -127,6 +129,7 @@ function findNearestStation() {
     if (!dataLoaded) {
         dataLoaded = true;
         needle.classList.remove('loading');
+        compassContainer.classList.remove('loading');
         if (distanceInterval) clearInterval(distanceInterval);
     }
     updateUI(minDistance);

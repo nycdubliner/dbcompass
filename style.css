@@ -138,6 +138,11 @@ main {
     z-index: 1;
     opacity: 0.15;
     letter-spacing: -0.05em;
+    transition: opacity 0.3s ease;
+}
+
+#compass-container.loading #distance-display {
+    opacity: 0.8;
 }
 
 #station-info {
