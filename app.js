@@ -12,6 +12,7 @@ let deviceHeading = 0;
 let targetRotation = 0; 
 let currentRotation = 0; 
 let dataLoaded = false;
+let distanceInterval = null;
 
 // Stabilization settings
 const SMOOTHING_FACTOR = 0.08; // Lower = smoother (slower to "catch up")
@@ -36,6 +37,14 @@ startBtn.addEventListener('click', async () => {
         // Show loading state immediately
         overlay.classList.add('hidden');
         needle.classList.add('loading');
+        
+        // Start distance counting-up effect
+        let count = 1;
+        distanceDisplay.innerText = '1m';
+        distanceInterval = setInterval(() => {
+            count += Math.floor(Math.random() * 5) + 1; // Randomly increment for "searching" feel
+            distanceDisplay.innerText = count + 'm';
+        }, 80);
         
         // 1. Request Orientation Permission (iOS 13+)
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -118,6 +127,7 @@ function findNearestStation() {
     if (!dataLoaded) {
         dataLoaded = true;
         needle.classList.remove('loading');
+        if (distanceInterval) clearInterval(distanceInterval);
     }
     updateUI(minDistance);
 }
