@@ -5,7 +5,7 @@
     --danger-color: #ef4444;
     --success-color: #22c55e;
     --card-bg: #1e293b;
-    --compass-size: min(85vw, 420px);
+    --compass-size: min(92vw, 45vh);
 }
 
 * {
@@ -34,8 +34,6 @@ body {
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
 }
 
 @media (max-width: 480px) {
@@ -45,14 +43,13 @@ body {
     }
     
     header {
-        padding: 30px 20px 0 20px;
+        padding: 40px 20px 0 20px;
     }
 
     #station-info {
         border-radius: 0 !important;
         margin-bottom: 0 !important;
-        padding: 2rem 1.5rem !important;
-        border-top: 1px solid rgba(255,255,255,0.05);
+        padding: 2.5rem 1.5rem !important;
     }
 
     footer {
@@ -65,16 +62,19 @@ header {
 }
 
 header h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 900;
     letter-spacing: -0.025em;
     color: var(--accent-color);
+    text-transform: uppercase;
 }
 
 #status-text {
-    font-size: 0.875rem;
-    opacity: 0.6;
+    font-size: 0.8rem;
+    opacity: 0.5;
     margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 main {
@@ -83,7 +83,7 @@ main {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 4vh; /* Responsive vertical gap */
 }
 
 #compass-container {
@@ -92,17 +92,17 @@ main {
     height: var(--compass-size);
     background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-color) 100%);
     border-radius: 50%;
-    border: 8px solid var(--card-bg);
+    border: 10px solid var(--card-bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.7);
 }
 
 #compass-needle {
     position: absolute;
-    width: calc(var(--compass-size) * 0.05);
-    height: calc(var(--compass-size) * 0.6);
+    width: calc(var(--compass-size) * 0.06);
+    height: calc(var(--compass-size) * 0.65);
     background: linear-gradient(to bottom, var(--accent-color) 50%, #475569 50%);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     transition: transform 0.1s cubic-bezier(0.1, 0.5, 0.5, 1);
@@ -115,28 +115,29 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: calc(var(--compass-size) * 0.08);
-    height: calc(var(--compass-size) * 0.08);
+    width: calc(var(--compass-size) * 0.1);
+    height: calc(var(--compass-size) * 0.1);
     background: var(--bg-color);
-    border: 4px solid var(--accent-color);
+    border: 5px solid var(--accent-color);
     border-radius: 50%;
 }
 
 #distance-display {
-    font-size: calc(var(--compass-size) * 0.22);
+    font-size: calc(var(--compass-size) * 0.25);
     font-weight: 900;
     z-index: 1;
-    opacity: 0.2;
+    opacity: 0.15;
     letter-spacing: -0.05em;
 }
 
 #station-info {
     width: 100%;
     background-color: var(--card-bg);
-    padding: 2rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem;
+    border-radius: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     transition: opacity 0.3s ease;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 #station-info.hidden {
@@ -145,17 +146,17 @@ main {
 }
 
 #station-name {
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 900;
+    margin-bottom: 2rem;
     text-align: center;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.05em;
 }
 
 .stats {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .stat {
@@ -163,24 +164,24 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(15, 23, 42, 0.4);
-    padding: 1rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(15, 23, 42, 0.6);
+    padding: 1.5rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .label {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    opacity: 0.5;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+    letter-spacing: 0.15em;
+    opacity: 0.4;
+    margin-bottom: 0.75rem;
+    font-weight: 700;
 }
 
 .value {
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 2.5rem;
+    font-weight: 900;
 }
 
 #bikes-count { color: var(--success-color); }
@@ -206,52 +207,55 @@ main {
 
 .modal {
     background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 2rem;
+    padding: 3rem 2rem;
+    border-radius: 2.5rem;
     text-align: center;
     max-width: 400px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal h2 {
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
-    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 900;
 }
 
 .modal p {
-    margin-bottom: 2.5rem;
+    margin-bottom: 3rem;
     line-height: 1.6;
-    opacity: 0.8;
+    opacity: 0.7;
+    font-size: 1.1rem;
 }
 
 #start-btn {
     background: var(--accent-color);
     color: var(--bg-color);
     border: none;
-    padding: 1.25rem;
+    padding: 1.5rem;
     font-size: 1.25rem;
-    font-weight: 800;
-    border-radius: 1rem;
+    font-weight: 900;
+    border-radius: 1.25rem;
     width: 100%;
     cursor: pointer;
-    box-shadow: 0 10px 15px -3px rgba(56, 189, 248, 0.3);
+    box-shadow: 0 20px 25px -5px rgba(56, 189, 248, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 #start-btn:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
 }
 
 footer {
-    padding: 1.5rem;
+    padding: 2rem;
     text-align: center;
     font-size: 0.75rem;
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 .timestamp {
     font-size: 0.6rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
 }
