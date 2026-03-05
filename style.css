@@ -5,6 +5,7 @@
     --danger-color: #ef4444;
     --success-color: #22c55e;
     --card-bg: #1e293b;
+    --compass-size: min(80vw, 350px);
 }
 
 * {
@@ -19,6 +20,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     height: 100vh;
+    height: -webkit-fill-available;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -29,24 +31,28 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
     width: 100%;
 }
 
 @media (max-width: 480px) {
     #app {
-        padding: 15px 0;
+        padding: 10px 0;
     }
     
     header {
         padding: 0 20px;
+        margin-bottom: 1rem;
     }
 
     #station-info {
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
+        border-radius: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    footer {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
     }
 }
 
@@ -73,27 +79,26 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
 }
 
 #compass-container {
     position: relative;
-    width: 280px;
-    height: 280px;
+    width: var(--compass-size);
+    height: var(--compass-size);
     background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-color) 100%);
     border-radius: 50%;
     border: 4px solid var(--card-bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 2rem;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
 #compass-needle {
     position: absolute;
-    width: 12px;
-    height: 140px;
+    width: calc(var(--compass-size) * 0.04);
+    height: calc(var(--compass-size) * 0.5);
     background: linear-gradient(to bottom, var(--accent-color) 50%, #64748b 50%);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     transition: transform 0.1s cubic-bezier(0.1, 0.5, 0.5, 1);
@@ -106,15 +111,15 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 16px;
-    height: 16px;
+    width: calc(var(--compass-size) * 0.06);
+    height: calc(var(--compass-size) * 0.06);
     background: var(--bg-color);
     border: 3px solid var(--accent-color);
     border-radius: 50%;
 }
 
 #distance-display {
-    font-size: 2.5rem;
+    font-size: calc(var(--compass-size) * 0.18);
     font-weight: 800;
     z-index: 1;
     opacity: 0.2;
