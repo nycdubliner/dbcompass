@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>dbcompass - Dublin Bikes</title>
     <link rel="stylesheet" href="style.css">
     <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF?text=db">
@@ -39,8 +39,8 @@
 
         <div id="permission-overlay">
             <div class="modal">
-                <h2>Welcome to dbcompass</h2>
-                <p>To point you to the nearest Dublin Bikes stand, we need access to your location and device orientation.</p>
+                <h2>Welcome</h2>
+                <p>To point you to the nearest Dublin Bikes stand, we need access to your location and sensors.</p>
                 <button id="start-btn">Start Tracking</button>
             </div>
         </div>
@@ -50,7 +50,12 @@
             <p id="deploy-time" class="timestamp"></p>
         </footer>
     </div>
-    <script src="deploy-config.js"></script>
+    
+    <script>
+        // Injected during deployment
+        window.DB_API_KEY = 'INJECT_API_KEY';
+        window.DEPLOY_TIME = 'INJECT_DEPLOY_TIME';
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -17,10 +17,10 @@ jobs:
         id: time
         run: echo "deploy_time=$(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_OUTPUT
 
-      - name: Create deploy-config.js
+      - name: Inject Secrets into index.html
         run: |
-          echo "window.DB_API_KEY = '${{ secrets.DB_API_KEY }}';" > deploy-config.js
-          echo "window.DEPLOY_TIME = '${{ steps.time.outputs.deploy_time }}';" >> deploy-config.js
+          sed -i "s/INJECT_API_KEY/${{ secrets.DB_API_KEY }}/g" index.html
+          sed -i "s/INJECT_DEPLOY_TIME/${{ steps.time.outputs.deploy_time }}/g" index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
