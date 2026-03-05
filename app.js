@@ -1,6 +1,8 @@
-const API_KEY = '4cb16cc25629379a9b853bdd1c55e7b86a203839';
-const CONTRACT_NAME = 'dublin';
-const API_URL = `https://api.jcdecaux.com/vls/v1/stations?contract=${CONTRACT_NAME}&apiKey=${API_KEY}`;
+// The API_KEY will be provided via a separate config.js or injected during build
+const getApiUrl = () => {
+    const key = window.DB_API_KEY || 'MISSING_KEY';
+    return `https://api.jcdecaux.com/vls/v1/stations?contract=dublin&apiKey=${key}`;
+};
 
 let stations = [];
 let userCoords = null;
@@ -64,7 +66,8 @@ startBtn.addEventListener('click', async () => {
 
 async function fetchStations() {
     try {
-        const response = await fetch(API_URL);
+        const url = getApiUrl();
+        const response = await fetch(url);
         stations = await response.json();
         if (userCoords) findNearestStation();
     } catch (err) {
