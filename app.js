@@ -18,6 +18,7 @@ let spinRotation = 0;
 let minSearchTimePassed = false;
 let dataReady = false;
 let targetDistance = 0;
+let bikesInterval = null;
 
 // Stabilization settings
 const SMOOTHING_FACTOR = 0.08; // Lower = smoother (slower to "catch up")
@@ -35,6 +36,12 @@ const standsCountEl = document.getElementById('stands-count');
 const stationInfoEl = document.getElementById('station-info');
 const overlay = document.getElementById('permission-overlay');
 const startBtn = document.getElementById('start-btn');
+
+// Start bike/stand randomizing effect on load
+bikesInterval = setInterval(() => {
+    bikesCountEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+    standsCountEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+}, 80);
 
 // --- Initialization ---
 
@@ -149,6 +156,7 @@ function checkReady() {
             dataLoaded = true;
             currentRotation = spinRotation % 360; // Handoff rotation
             if (distanceInterval) clearInterval(distanceInterval);
+            if (bikesInterval) clearInterval(bikesInterval);
             updateUI(targetDistance);
         }
     } else if (dataLoaded) {
@@ -159,8 +167,9 @@ function checkReady() {
 function updateUI(distance) {
     if (!nearestStation) return;
 
-    stationInfoEl.classList.remove('hidden');
     stationNameEl.innerText = nearestStation.name;
+    stationNameEl.classList.add('loaded');
+    
     bikesCountEl.innerText = nearestStation.available_bikes;
     standsCountEl.innerText = nearestStation.available_bike_stands;
 

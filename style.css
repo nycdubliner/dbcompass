@@ -156,15 +156,9 @@ main {
     padding: 2.5rem;
     border-radius: 2rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    transition: opacity 0.3s ease;
     border-top: 1px solid rgba(255,255,255,0.05);
     pointer-events: auto;
     z-index: 10;
-}
-
-#station-info.hidden {
-    opacity: 0;
-    pointer-events: none;
 }
 
 #station-name {
@@ -174,6 +168,13 @@ main {
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    min-height: 2rem;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+#station-name.loaded {
+    opacity: 1;
 }
 
 .stats {
