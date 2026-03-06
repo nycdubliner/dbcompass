@@ -45,11 +45,11 @@ startBtn.addEventListener('click', async () => {
         isSpinning = true;
         minSearchTimePassed = false;
         
-        // Ensure the search animation runs for at least 1.5s
+        // Ensure the search animation runs for at least 0.5s
         setTimeout(() => {
             minSearchTimePassed = true;
             checkReady();
-        }, 1500);
+        }, 500);
         
         // Start distance counting-up effect
         let count = 1;
