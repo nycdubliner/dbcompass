@@ -212,8 +212,8 @@ main {
     padding: 3rem 2rem;
     border-radius: 2.5rem;
     text-align: center;
-    width: var(--compass-size);
-    max-width: 450px;
+    width: calc(var(--compass-size) * 2);
+    max-width: 90vw;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
