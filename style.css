@@ -82,12 +82,19 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 4vh; /* Responsive vertical gap */
+    justify-content: flex-end;
+    position: relative;
+    z-index: 10;
+    pointer-events: none;
 }
 
 #compass-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
     width: var(--compass-size);
     height: var(--compass-size);
     background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-color) 100%);
@@ -97,6 +104,8 @@ main {
     align-items: center;
     justify-content: center;
     box-shadow: 0 0 80px rgba(0, 0, 0, 0.7);
+    pointer-events: auto;
+    z-index: 1;
 }
 
 #compass-needle {
@@ -140,6 +149,7 @@ main {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     transition: opacity 0.3s ease;
     border-top: 1px solid rgba(255,255,255,0.05);
+    pointer-events: auto;
 }
 
 #station-info.hidden {
