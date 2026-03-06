@@ -13,6 +13,11 @@ let targetRotation = 0;
 let currentRotation = 0; 
 let dataLoaded = false;
 let distanceInterval = null;
+let isSpinning = false;
+let spinRotation = 0;
+let minSearchTimePassed = false;
+let dataReady = false;
+let targetDistance = 0;
 
 // Stabilization settings
 const SMOOTHING_FACTOR = 0.08; // Lower = smoother (slower to "catch up")
@@ -37,8 +42,14 @@ startBtn.addEventListener('click', async () => {
     try {
         // Show loading state immediately
         overlay.classList.add('hidden');
-        needle.classList.add('loading');
-        compassContainer.classList.add('loading');
+        isSpinning = true;
+        minSearchTimePassed = false;
+        
+        // Ensure the search animation runs for at least 1.5s
+        setTimeout(() => {
+            minSearchTimePassed = true;
+            checkReady();
+        }, 1500);
         
         // Start distance counting-up effect
         let count = 1;
@@ -126,13 +137,23 @@ function findNearestStation() {
     });
 
     nearestStation = closest;
-    if (!dataLoaded) {
-        dataLoaded = true;
-        needle.classList.remove('loading');
-        compassContainer.classList.remove('loading');
-        if (distanceInterval) clearInterval(distanceInterval);
+    targetDistance = minDistance;
+    dataReady = true;
+    checkReady();
+}
+
+function checkReady() {
+    if (dataReady && isSpinning) {
+        if (minSearchTimePassed) {
+            isSpinning = false;
+            dataLoaded = true;
+            currentRotation = spinRotation % 360; // Handoff rotation
+            if (distanceInterval) clearInterval(distanceInterval);
+            updateUI(targetDistance);
+        }
+    } else if (dataLoaded) {
+        updateUI(targetDistance); // Continuous updates as user moves
     }
-    updateUI(minDistance);
 }
 
 function updateUI(distance) {
@@ -196,7 +217,10 @@ function updateCompass() {
 
 // Low-pass filter for smooth needle movement
 function updateSmoothing() {
-    if (dataLoaded) {
+    if (isSpinning) {
+        spinRotation = (spinRotation + 1) % 360; // 60fps * 1 = 60 deg/sec = 6s per rotation
+        needle.style.transform = `rotate(${spinRotation}deg)`;
+    } else if (dataLoaded) {
         // Find the shortest path for rotation (handle 360-degree wrap)
         let delta = targetRotation - currentRotation;
         

@@ -105,18 +105,8 @@ main {
     height: calc(var(--compass-size) * 0.65);
     background: linear-gradient(to bottom, var(--accent-color) 50%, #475569 50%);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.5, 1);
+    /* Removed transition so JS can smoothly animate it frame-by-frame */
     z-index: 2;
-}
-
-#compass-needle.loading {
-    animation: slow-spin 6s linear infinite;
-    transition: none;
-}
-
-@keyframes slow-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 
 #compass-needle::after {
@@ -136,13 +126,10 @@ main {
     font-size: calc(var(--compass-size) * 0.25);
     font-weight: 900;
     z-index: 1;
-    opacity: 0.15;
+    opacity: 0.9;
     letter-spacing: -0.05em;
-    transition: opacity 0.3s ease;
-}
-
-#compass-container.loading #distance-display {
-    opacity: 0.8;
+    color: var(--text-color);
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
 #station-info {
