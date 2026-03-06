@@ -1,186 +1,151 @@
-// The API_KEY will be provided via a separate config.js or injected during build
-const getApiUrl = () => {
-    // Fallback to the user's provided key if the injected config is missing
-    const key = window.DB_API_KEY || '4cb16cc25629379a9b853bdd1c55e7b86a203839';
-    return `https://api.jcdecaux.com/vls/v1/stations?contract=dublin&apiKey=${key}`;
+/**
+ * DBCompass - Dublin Bikes Navigation
+ * Core Application Logic
+ */
+
+// --- Configuration & Constants ---
+const CONFIG = {
+    // API_KEY is provided via deployment injection
+    apiKey: window.DB_API_KEY || '4cb16cc25629379a9b853bdd1c55e7b86a203839',
+    contractName: 'dublin',
+    refreshIntervalMs: 30000,
+    searchAnimationMinTimeMs: 500,
+    smoothingFactor: 0.08,
+    headingBufferSize: 20
 };
 
-let stations = [];
-let userCoords = null;
-let nearestStation = null;
-let deviceHeading = 0; 
-let targetRotation = 0; 
-let currentRotation = 0; 
-let dataLoaded = false;
-let distanceInterval = null;
-let isSpinning = false;
-let spinRotation = 0;
-let minSearchTimePassed = false;
-let dataReady = false;
-let targetDistance = 0;
-let bikesInterval = null;
+// --- Application State ---
+const state = {
+    stations: [],
+    userLocation: null,
+    nearestStation: null,
+    targetDistance: 0,
+    
+    // Compass State
+    deviceHeading: 0,
+    headingBuffer: [],
+    targetRotation: 0,
+    currentRotation: 0,
+    
+    // Animation State
+    isSpinning: false,
+    spinRotation: 0,
+    dataReady: false,
+    minSearchTimePassed: false,
+    dataLoaded: false,
+    
+    // Interval IDs
+    distanceInterval: null,
+    bikesInterval: null
+};
 
-// Stabilization settings
-const SMOOTHING_FACTOR = 0.08; // Lower = smoother (slower to "catch up")
-const HEADING_BUFFER_SIZE = 20; // Avg over last 20 readings (~1-2 seconds)
-let headingBuffer = [];
-
-// DOM Elements
-const needle = document.getElementById('compass-needle');
-const compassContainer = document.getElementById('compass-container');
-const distanceDisplay = document.getElementById('distance-display');
-const statusText = document.getElementById('status-text');
-const stationNameEl = document.getElementById('station-name');
-const bikesCountEl = document.getElementById('bikes-count');
-const standsCountEl = document.getElementById('stands-count');
-const stationInfoEl = document.getElementById('station-info');
-const overlay = document.getElementById('permission-overlay');
-const startBtn = document.getElementById('start-btn');
-
-// Start bike/stand randomizing effect on load
-bikesInterval = setInterval(() => {
-    bikesCountEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-    standsCountEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-}, 80);
+// --- DOM Elements ---
+const dom = {
+    needle: document.getElementById('compass-needle'),
+    distanceDisplay: document.getElementById('distance-display'),
+    statusText: document.getElementById('status-text'),
+    stationName: document.getElementById('station-name'),
+    bikesCount: document.getElementById('bikes-count'),
+    standsCount: document.getElementById('stands-count'),
+    overlay: document.getElementById('permission-overlay'),
+    startBtn: document.getElementById('start-btn'),
+    deployTime: document.getElementById('deploy-time')
+};
 
 // --- Initialization ---
+function init() {
+    // Set deployment timestamp on load
+    if (window.DEPLOY_TIME) {
+        dom.deployTime.innerText = `Last deployed: ${window.DEPLOY_TIME}`;
+    } else {
+        dom.deployTime.innerText = 'Last deployed: Unknown (Check build status)';
+    }
 
-startBtn.addEventListener('click', async () => {
+    // Start background UI effects (randomizing numbers)
+    startIdleAnimations();
+
+    // Bind event listeners
+    dom.startBtn.addEventListener('click', handleStartTracking);
+}
+
+// --- Event Handlers ---
+async function handleStartTracking() {
+    startSearchAnimations();
+    
     try {
-        // Show loading state immediately
-        overlay.classList.add('hidden');
-        isSpinning = true;
-        minSearchTimePassed = false;
-        
-        // Ensure the search animation runs for at least 0.5s
-        setTimeout(() => {
-            minSearchTimePassed = true;
-            checkReady();
-        }, 500);
-        
-        // Start distance counting-up effect
-        let count = 1;
-        distanceDisplay.innerText = '1m';
-        distanceInterval = setInterval(() => {
-            count += Math.floor(Math.random() * 5) + 1; // Randomly increment for "searching" feel
-            distanceDisplay.innerText = count + 'm';
-        }, 80);
-        
-        // 1. Request Orientation Permission (iOS 13+)
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                alert('Orientation permission is required for the compass to work.');
-                return;
-            }
-        }
-
-        // 2. Start tracking orientation
-        window.addEventListener('deviceorientation', handleOrientation, true);
-        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-
-        // 3. Get Geolocation
-        if (!navigator.geolocation) {
-            alert('Geolocation is not supported by your browser.');
-            return;
-        }
-
-        navigator.geolocation.watchPosition(
-            updateUserLocation,
-            (err) => {
-                console.error('Location error:', err);
-                statusText.innerText = 'Error: Location access denied.';
-            },
-            { enableHighAccuracy: true }
-        );
-
-        // 4. Fetch Station Data
+        await requestPermissions();
+        startSensors();
         await fetchStations();
-        setInterval(fetchStations, 30000); // Refresh every 30s
-
-        // Start smoothing loop
-        requestAnimationFrame(updateSmoothing);
+        
+        // Refresh data periodically
+        setInterval(fetchStations, CONFIG.refreshIntervalMs);
+        
+        // Start the continuous compass rendering loop
+        requestAnimationFrame(renderCompass);
     } catch (err) {
         console.error('Initialization error:', err);
         alert('Failed to start. Please ensure you are on HTTPS and have granted permissions.');
     }
-});
+}
 
-async function fetchStations() {
-    try {
-        const url = getApiUrl();
-        const response = await fetch(url);
-        stations = await response.json();
-        if (userCoords) findNearestStation();
-    } catch (err) {
-        console.error('API Error:', err);
-        statusText.innerText = 'Error fetching bike data.';
+// --- Permissions & Sensors ---
+async function requestPermissions() {
+    // Request Orientation Permission (iOS 13+)
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        if (permission !== 'granted') {
+            throw new Error('Orientation permission denied');
+        }
+    }
+    
+    // Check Geolocation Support
+    if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported');
     }
 }
 
-function updateUserLocation(position) {
-    userCoords = {
+function startSensors() {
+    // Start tracking device orientation
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+
+    // Start tracking user location
+    navigator.geolocation.watchPosition(
+        handleLocationUpdate,
+        (err) => {
+            console.error('Location error:', err);
+            dom.statusText.innerText = 'Error: Location access denied.';
+        },
+        { enableHighAccuracy: true }
+    );
+}
+
+// --- Data Fetching ---
+async function fetchStations() {
+    try {
+        const url = `https://api.jcdecaux.com/vls/v1/stations?contract=${CONFIG.contractName}&apiKey=${CONFIG.apiKey}`;
+        const response = await fetch(url);
+        state.stations = await response.json();
+        
+        if (state.userLocation) {
+            calculateNearestStation();
+        }
+    } catch (err) {
+        console.error('API Error:', err);
+        dom.statusText.innerText = 'Error fetching bike data.';
+    }
+}
+
+// --- Logic & Math ---
+function handleLocationUpdate(position) {
+    state.userLocation = {
         lat: position.coords.latitude,
         lng: position.coords.longitude
     };
-    if (stations.length > 0) findNearestStation();
-}
-
-function findNearestStation() {
-    if (!userCoords || stations.length === 0) return;
-
-    let minDistance = Infinity;
-    let closest = null;
-
-    stations.forEach(station => {
-        const dist = getDistance(
-            userCoords.lat, userCoords.lng,
-            station.position.lat, station.position.lng
-        );
-        if (dist < minDistance) {
-            minDistance = dist;
-            closest = station;
-        }
-    });
-
-    nearestStation = closest;
-    targetDistance = minDistance;
-    dataReady = true;
-    checkReady();
-}
-
-function checkReady() {
-    if (dataReady && isSpinning) {
-        if (minSearchTimePassed) {
-            isSpinning = false;
-            dataLoaded = true;
-            currentRotation = spinRotation % 360; // Handoff rotation
-            if (distanceInterval) clearInterval(distanceInterval);
-            if (bikesInterval) clearInterval(bikesInterval);
-            updateUI(targetDistance);
-        }
-    } else if (dataLoaded) {
-        updateUI(targetDistance); // Continuous updates as user moves
-    }
-}
-
-function updateUI(distance) {
-    if (!nearestStation) return;
-
-    stationNameEl.innerText = nearestStation.name;
-    stationNameEl.classList.add('loaded');
     
-    bikesCountEl.innerText = nearestStation.available_bikes;
-    standsCountEl.innerText = nearestStation.available_bike_stands;
-
-    // Display distance nicely
-    if (distance >= 1000) {
-        distanceDisplay.innerText = (distance / 1000).toFixed(1) + 'km';
-    } else {
-        distanceDisplay.innerText = Math.round(distance) + 'm';
+    if (state.stations.length > 0) {
+        calculateNearestStation();
     }
-
-    statusText.innerText = 'Pointing to nearest station';
 }
 
 function handleOrientation(event) {
@@ -190,65 +155,172 @@ function handleOrientation(event) {
 
     if (heading === undefined || heading === null) return;
 
-    // Add to circular buffer
-    headingBuffer.push(heading);
-    if (headingBuffer.length > HEADING_BUFFER_SIZE) {
-        headingBuffer.shift();
+    // Add to circular buffer for stabilization
+    state.headingBuffer.push(heading);
+    if (state.headingBuffer.length > CONFIG.headingBufferSize) {
+        state.headingBuffer.shift();
     }
 
     // Circular Averaging: Average the vectors (Sin/Cos) to avoid North (360/0) jump issues
     let sumSin = 0;
     let sumCos = 0;
     
-    headingBuffer.forEach(h => {
+    state.headingBuffer.forEach(h => {
         const rad = h * Math.PI / 180;
         sumSin += Math.sin(rad);
         sumCos += Math.cos(rad);
     });
     
     const avgRad = Math.atan2(sumSin, sumCos);
-    deviceHeading = (avgRad * 180 / Math.PI + 360) % 360;
+    state.deviceHeading = (avgRad * 180 / Math.PI + 360) % 360;
 
-    updateCompass();
+    updateTargetRotation();
 }
 
-function updateCompass() {
-    if (!userCoords || !nearestStation) return;
+function calculateNearestStation() {
+    if (!state.userLocation || state.stations.length === 0) return;
+
+    let minDistance = Infinity;
+    let closest = null;
+
+    state.stations.forEach(station => {
+        const dist = getDistance(
+            state.userLocation.lat, state.userLocation.lng,
+            station.position.lat, station.position.lng
+        );
+        if (dist < minDistance) {
+            minDistance = dist;
+            closest = station;
+        }
+    });
+
+    state.nearestStation = closest;
+    state.targetDistance = minDistance;
+    state.dataReady = true;
+    
+    updateTargetRotation();
+    checkReadiness();
+}
+
+function updateTargetRotation() {
+    if (!state.userLocation || !state.nearestStation) return;
 
     const bearing = getBearing(
-        userCoords.lat, userCoords.lng,
-        nearestStation.position.lat, nearestStation.position.lng
+        state.userLocation.lat, state.userLocation.lng,
+        state.nearestStation.position.lat, state.nearestStation.position.lng
     );
 
     // Rotation is: Bearing to target - Device Heading
-    targetRotation = bearing - deviceHeading;
+    state.targetRotation = bearing - state.deviceHeading;
 }
 
-// Low-pass filter for smooth needle movement
-function updateSmoothing() {
-    if (isSpinning) {
-        spinRotation = (spinRotation + 1) % 360; // 60fps * 1 = 60 deg/sec = 6s per rotation
-        needle.style.transform = `rotate(${spinRotation}deg)`;
-    } else if (dataLoaded) {
+// --- UI & Animations ---
+function startIdleAnimations() {
+    // Start bike/stand randomizing effect on load to show activity
+    state.bikesInterval = setInterval(() => {
+        dom.bikesCount.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        dom.standsCount.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+    }, 80);
+}
+
+function startSearchAnimations() {
+    // Hide overlay immediately
+    dom.overlay.classList.add('hidden');
+    
+    // Set state flags
+    state.isSpinning = true;
+    state.minSearchTimePassed = false;
+    
+    // Ensure the search animation runs for a minimum duration to avoid flickering
+    setTimeout(() => {
+        state.minSearchTimePassed = true;
+        checkReadiness();
+    }, CONFIG.searchAnimationMinTimeMs);
+    
+    // Start distance counting-up effect
+    let count = 1;
+    dom.distanceDisplay.innerText = '1m';
+    state.distanceInterval = setInterval(() => {
+        count += Math.floor(Math.random() * 5) + 1; // Randomly increment for "searching" feel
+        dom.distanceDisplay.innerText = count + 'm';
+    }, 80);
+}
+
+function checkReadiness() {
+    // Wait until both the data is fetched and the minimum animation time has passed
+    if (state.dataReady && state.isSpinning) {
+        if (state.minSearchTimePassed) {
+            transitionToLiveTracking();
+        }
+    } else if (state.dataLoaded) {
+        // If already live, just update the UI with new values
+        updateLiveData(); 
+    }
+}
+
+function transitionToLiveTracking() {
+    state.isSpinning = false;
+    state.dataLoaded = true;
+    
+    // Handoff the rotation so the needle doesn't snap back to zero
+    state.currentRotation = state.spinRotation % 360; 
+    
+    // Stop randomizing animations
+    if (state.distanceInterval) clearInterval(state.distanceInterval);
+    if (state.bikesInterval) clearInterval(state.bikesInterval);
+    
+    updateLiveData();
+}
+
+function updateLiveData() {
+    if (!state.nearestStation) return;
+
+    // Fade in station name
+    dom.stationName.innerText = state.nearestStation.name;
+    dom.stationName.classList.add('loaded');
+    
+    // Lock in exact numbers
+    dom.bikesCount.innerText = state.nearestStation.available_bikes;
+    dom.standsCount.innerText = state.nearestStation.available_bike_stands;
+
+    // Display distance nicely formatted
+    if (state.targetDistance >= 1000) {
+        dom.distanceDisplay.innerText = (state.targetDistance / 1000).toFixed(1) + 'km';
+    } else {
+        dom.distanceDisplay.innerText = Math.round(state.targetDistance) + 'm';
+    }
+
+    dom.statusText.innerText = 'Pointing to nearest station';
+}
+
+function renderCompass() {
+    if (state.isSpinning) {
+        // Continuous slow spin while searching (60fps * 1 = 60 deg/sec = 6s per rotation)
+        state.spinRotation = (state.spinRotation + 1) % 360; 
+        dom.needle.style.transform = `rotate(${state.spinRotation}deg)`;
+    } else if (state.dataLoaded) {
+        // Apply low-pass filter for smooth needle movement
         // Find the shortest path for rotation (handle 360-degree wrap)
-        let delta = targetRotation - currentRotation;
+        let delta = state.targetRotation - state.currentRotation;
         
         if (delta > 180) delta -= 360;
         if (delta < -180) delta += 360;
 
         // Apply smoothing
-        currentRotation += delta * SMOOTHING_FACTOR;
+        state.currentRotation += delta * CONFIG.smoothingFactor;
         
         // Update needle
-        needle.style.transform = `rotate(${currentRotation}deg)`;
+        dom.needle.style.transform = `rotate(${state.currentRotation}deg)`;
     }
 
-    requestAnimationFrame(updateSmoothing);
+    requestAnimationFrame(renderCompass);
 }
 
 // --- Math Utilities ---
 
-// Haversine formula to get distance in meters
+/**
+ * Haversine formula to get distance in meters between two coordinates
+ */
 function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; // Earth radius in meters
     const φ1 = lat1 * Math.PI / 180;
@@ -264,7 +336,9 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// Calculate bearing (initial heading) in degrees
+/**
+ * Calculate bearing (initial heading) in degrees between two coordinates
+ */
 function getBearing(lat1, lon1, lat2, lon2) {
     const φ1 = lat1 * Math.PI / 180;
     const φ2 = lat2 * Math.PI / 180;
@@ -279,12 +353,5 @@ function getBearing(lat1, lon1, lat2, lon2) {
     return (θ * 180 / Math.PI + 360) % 360; // range 0-360
 }
 
-// Set deployment timestamp on load
-window.addEventListener('load', () => {
-    const deployEl = document.getElementById('deploy-time');
-    if (window.DEPLOY_TIME) {
-        deployEl.innerText = `Last deployed: ${window.DEPLOY_TIME}`;
-    } else {
-        deployEl.innerText = 'Last deployed: Unknown (Check build status)';
-    }
-});
+// Boot the application
+window.addEventListener('load', init);
