@@ -58,6 +58,7 @@ async function handleStartTracking() {
     
     try {
         await requestPermissions();
+        await requestWakeLock();
         startSensors();
         await loadStations();
         
@@ -80,6 +81,24 @@ async function requestPermissions() {
     
     if (!navigator.geolocation) {
         throw new Error('Geolocation is not supported');
+    }
+}
+
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            await navigator.wakeLock.request('screen');
+            console.log('Wake Lock is active!');
+            
+            // Re-request if the page becomes visible again
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible') {
+                    await navigator.wakeLock.request('screen');
+                }
+            });
+        } catch (err) {
+            console.warn('Wake Lock request failed:', err);
+        }
     }
 }
 
