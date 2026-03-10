@@ -3,6 +3,7 @@
     --text-color: #f8fafc;
     --accent-color: #38bdf8;
     --danger-color: #ef4444;
+    --warning-color: #f59e0b;
     --success-color: #22c55e;
     --card-bg: #1e293b;
 }
@@ -177,8 +178,11 @@ main {
     font-weight: 900;
 }
 
-#bikes-count { color: var(--success-color); }
 #stands-count { color: var(--accent-color); }
+
+.color-success { color: var(--success-color) !important; }
+.color-warning { color: var(--warning-color) !important; }
+.color-danger { color: var(--danger-color) !important; }
 
 #permission-overlay {
     position: fixed;

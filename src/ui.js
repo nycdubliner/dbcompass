@@ -69,6 +69,16 @@ export class UI {
         this.dom.bikesCount.innerText = station.available_bikes;
         this.dom.standsCount.innerText = station.available_bike_stands;
 
+        // Dynamic color coding for bikes
+        this.dom.bikesCount.classList.remove('color-success', 'color-warning', 'color-danger');
+        if (station.available_bikes >= 5) {
+            this.dom.bikesCount.classList.add('color-success');
+        } else if (station.available_bikes > 0) {
+            this.dom.bikesCount.classList.add('color-warning');
+        } else {
+            this.dom.bikesCount.classList.add('color-danger');
+        }
+
         if (distance >= 1000) {
             this.dom.distanceDisplay.innerText = (distance / 1000).toFixed(1) + 'km';
         } else {
