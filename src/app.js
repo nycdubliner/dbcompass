@@ -1,11 +1,12 @@
 import { getDistance, getBearing } from './math.js';
 import { fetchStations } from './api.js';
 import { UI } from './ui.js';
+import { detectCity } from './city-detector.js';
 
 // --- Configuration & Constants ---
 const CONFIG = {
     apiKey: window.DB_API_KEY,
-    contractName: 'dublin',
+    contractName: 'dublin', // default, updated dynamically
     refreshIntervalMs: 30000,
     searchAnimationMinTimeMs: 500,
     smoothingFactor: 0.08,
@@ -166,10 +167,18 @@ async function loadStations() {
 
 // --- Logic & Math ---
 function handleLocationUpdate(position) {
-    state.userLocation = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-    };
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    
+    state.userLocation = { lat, lng };
+
+    const detectedCity = detectCity(lat, lng);
+    if (detectedCity !== CONFIG.contractName) {
+        console.log(`City changed to ${detectedCity}, reloading stations...`);
+        CONFIG.contractName = detectedCity;
+        loadStations(); // Fetch new city data
+        return;
+    }
     
     if (state.stations.length > 0) {
         calculateNearestStation();

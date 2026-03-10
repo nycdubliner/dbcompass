@@ -6,7 +6,8 @@ const ASSETS_TO_CACHE = [
   './src/app.js',
   './src/api.js',
   './src/math.js',
-  './src/ui.js'
+  './src/ui.js',
+  './src/city-detector.js'
 ];
 
 self.addEventListener('install', (event) => {
