@@ -28,7 +28,8 @@ const state = {
     spinRotation: 0,
     dataReady: false,
     minSearchTimePassed: false,
-    dataLoaded: false
+    dataLoaded: false,
+    hasVibratedNear: false
 };
 
 const ui = new UI();
@@ -229,6 +230,15 @@ function calculateNearestStation() {
         return;
     }
 
+    if (minDistance < 50 && !state.hasVibratedNear) {
+        state.hasVibratedNear = true;
+        if ('vibrate' in navigator) {
+            navigator.vibrate([100, 50, 100]); // Double vibration when close
+        }
+    } else if (minDistance >= 50) {
+        state.hasVibratedNear = false; // Reset if they walk away
+    }
+
     state.dataReady = true;
     
     updateTargetRotation();
@@ -265,6 +275,10 @@ function transitionToLiveTracking() {
     
     ui.stopAnimations();
     ui.updateLiveStation(state.nearestStation, state.targetDistance);
+    
+    if ('vibrate' in navigator) {
+        navigator.vibrate(50); // Lock on vibration
+    }
 }
 
 function renderCompass() {
