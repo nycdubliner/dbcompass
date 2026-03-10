@@ -4,7 +4,7 @@ import { UI } from './ui.js';
 
 // --- Configuration & Constants ---
 const CONFIG = {
-    apiKey: window.DB_API_KEY || '4cb16cc25629379a9b853bdd1c55e7b86a203839',
+    apiKey: window.DB_API_KEY,
     contractName: 'dublin',
     refreshIntervalMs: 30000,
     searchAnimationMinTimeMs: 500,
@@ -42,6 +42,11 @@ function init() {
 
 // --- Event Handlers ---
 async function handleStartTracking() {
+    if (!CONFIG.apiKey || CONFIG.apiKey === 'INJECT_API_KEY') {
+        ui.showError('Error: Invalid API Key. Check deployment configuration.');
+        return;
+    }
+
     ui.startSearchAnimations();
     state.isSpinning = true;
     state.minSearchTimePassed = false;
@@ -79,8 +84,37 @@ async function requestPermissions() {
 }
 
 function startSensors() {
-    window.addEventListener('deviceorientation', handleOrientation, true);
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    if ('AbsoluteOrientationSensor' in window) {
+        try {
+            const sensor = new AbsoluteOrientationSensor({ frequency: 60 });
+            sensor.addEventListener('reading', () => {
+                // Sensor quaternion to heading calculation
+                const q = sensor.quaternion;
+                if (!q) return;
+                
+                // Extract yaw (heading) from quaternion
+                const heading = Math.atan2(2 * (q[0]*q[1] + q[2]*q[3]), 1 - 2 * (q[1]*q[1] + q[2]*q[2]));
+                let headingDeg = heading * (180 / Math.PI);
+                if (headingDeg < 0) headingDeg += 360;
+                
+                processHeading(headingDeg);
+            });
+            sensor.addEventListener('error', (error) => {
+                if (error.name === 'NotAllowedError') {
+                    console.error('Permission to access sensor was denied.');
+                } else if (error.name === 'NotReadableError') {
+                    console.error('Cannot connect to the sensor.');
+                }
+                fallbackToLegacyOrientation();
+            });
+            sensor.start();
+        } catch (error) {
+            console.error('Sensor error:', error);
+            fallbackToLegacyOrientation();
+        }
+    } else {
+        fallbackToLegacyOrientation();
+    }
 
     navigator.geolocation.watchPosition(
         handleLocationUpdate,
@@ -90,6 +124,11 @@ function startSensors() {
         },
         { enableHighAccuracy: true }
     );
+}
+
+function fallbackToLegacyOrientation() {
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
 }
 
 // --- Data Fetching ---
@@ -119,9 +158,11 @@ function handleLocationUpdate(position) {
 
 function handleOrientation(event) {
     let heading = event.webkitCompassHeading || (360 - event.alpha);
-
     if (heading === undefined || heading === null) return;
+    processHeading(heading);
+}
 
+function processHeading(heading) {
     state.headingBuffer.push(heading);
     if (state.headingBuffer.length > CONFIG.headingBufferSize) {
         state.headingBuffer.shift();

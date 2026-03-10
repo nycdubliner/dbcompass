@@ -7,6 +7,16 @@ test.describe('DBCompass Layout & E2E', () => {
   });
 
   test('app loads and displays correctly on different viewports', async ({ page }) => {
+    // Intercept HTML to inject mock API key
+    await page.route('/', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      await route.fulfill({
+        response,
+        body: body.replace('INJECT_API_KEY', 'mock-api-key')
+      });
+    });
+
     // Mock device orientation since it's hard to trigger natively in headless
     await page.addInitScript(() => {
       window.DeviceOrientationEvent = class DeviceOrientationEvent extends Event {
