@@ -5,7 +5,6 @@
     --danger-color: #ef4444;
     --success-color: #22c55e;
     --card-bg: #1e293b;
-    --compass-size: min(92vw, 45vh);
 }
 
 * {
@@ -30,47 +29,23 @@ body {
 }
 
 #app {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    height: 100vh;
+    height: 100dvh;
+    padding: clamp(10px, 4vw, 20px);
     max-width: 600px;
     margin: 0 auto;
 }
 
-@media (max-width: 480px) {
-    #app {
-        padding: 0;
-        max-width: 100%;
-    }
-    
-    header {
-        padding: 40px 20px 0 20px;
-    }
-
-    #station-info {
-        position: absolute;
-        bottom: 60px;
-        left: 0;
-        right: 0;
-        width: 100%;
-        border-radius: 0 !important;
-        margin-bottom: 0 !important;
-        padding: 2.5rem 1.5rem !important;
-    }
-
-    footer {
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-    }
-}
-
 header {
     text-align: center;
+    padding-top: clamp(10px, 4vh, 40px);
+    flex-shrink: 0;
 }
 
 header h1 {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
     font-weight: 900;
     letter-spacing: -0.025em;
     color: var(--accent-color);
@@ -78,7 +53,7 @@ header h1 {
 }
 
 #status-text {
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 3vw, 0.8rem);
     opacity: 0.8;
     margin-top: 0.25rem;
     text-transform: uppercase;
@@ -90,18 +65,16 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-evenly;
     z-index: 10;
     pointer-events: none;
+    width: 100%;
+    padding: clamp(10px, 4vh, 20px) 0;
 }
 
 #compass-container {
-    position: absolute;
-    top: 42%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: var(--compass-size);
-    height: var(--compass-size);
+    width: clamp(200px, 75vmin, 400px);
+    height: clamp(200px, 75vmin, 400px);
     background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-color) 100%);
     border-radius: 50%;
     border: 10px solid var(--card-bg);
@@ -111,15 +84,16 @@ main {
     box-shadow: 0 0 80px rgba(0, 0, 0, 0.7);
     pointer-events: auto;
     z-index: 1;
+    position: relative;
+    flex-shrink: 0;
 }
 
 #compass-needle {
     position: absolute;
-    width: calc(var(--compass-size) * 0.06);
-    height: calc(var(--compass-size) * 0.65);
+    width: 6%;
+    height: 65%;
     background: linear-gradient(to bottom, var(--accent-color) 50%, #475569 50%);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    /* Removed transition so JS can smoothly animate it frame-by-frame */
     z-index: 2;
 }
 
@@ -129,15 +103,15 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: calc(var(--compass-size) * 0.1);
-    height: calc(var(--compass-size) * 0.1);
+    width: 160%;
+    aspect-ratio: 1;
     background: var(--bg-color);
     border: 5px solid var(--accent-color);
     border-radius: 50%;
 }
 
 #distance-display {
-    font-size: calc(var(--compass-size) * 0.25);
+    font-size: clamp(3rem, 15vmin, 5rem);
     font-weight: 900;
     z-index: 1;
     opacity: 0.9;
@@ -147,14 +121,10 @@ main {
 }
 
 #station-info {
-    position: absolute;
-    bottom: max(10vh, 80px);
-    left: 20px;
-    right: 20px;
-    width: auto;
+    width: 100%;
     background-color: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 2rem;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
+    border-radius: clamp(1rem, 4vw, 2rem);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border-top: 1px solid rgba(255,255,255,0.05);
     pointer-events: auto;
@@ -162,9 +132,9 @@ main {
 }
 
 #station-name {
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
     font-weight: 900;
-    margin-bottom: 2rem;
+    margin-bottom: clamp(1rem, 4vw, 2rem);
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -179,7 +149,7 @@ main {
 
 .stats {
     display: flex;
-    gap: 1.5rem;
+    gap: clamp(0.75rem, 3vw, 1.5rem);
 }
 
 .stat {
@@ -188,13 +158,13 @@ main {
     flex-direction: column;
     align-items: center;
     background: rgba(15, 23, 42, 0.6);
-    padding: 1.5rem 1rem;
+    padding: clamp(1rem, 4vw, 1.5rem) clamp(0.5rem, 2vw, 1rem);
     border-radius: 1rem;
     border: 1px solid rgba(255,255,255,0.1);
 }
 
 .label {
-    font-size: 1.2rem;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
     text-transform: uppercase;
     letter-spacing: 0.15em;
     opacity: 0.8;
@@ -203,7 +173,7 @@ main {
 }
 
 .value {
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 8vw, 2.5rem);
     font-weight: 900;
 }
 
@@ -216,7 +186,7 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--bg-color); /* Fully opaque */
+    background: var(--bg-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -230,16 +200,16 @@ main {
 
 .modal {
     background: var(--card-bg);
-    padding: 3rem 2rem;
+    padding: clamp(2rem, 8vw, 3rem) clamp(1.5rem, 6vw, 2rem);
     border-radius: 2.5rem;
     text-align: center;
-    width: calc(var(--compass-size) * 2);
-    max-width: 90vw;
+    width: 100%;
+    max-width: 400px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .modal h2 {
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 8vw, 2.5rem);
     margin-bottom: 1.5rem;
     font-weight: 900;
 }
@@ -248,15 +218,15 @@ main {
     margin-bottom: 3rem;
     line-height: 1.6;
     opacity: 0.9;
-    font-size: 1.5rem;
+    font-size: clamp(1.1rem, 5vw, 1.5rem);
 }
 
 #start-btn {
     background: var(--accent-color);
     color: var(--bg-color);
     border: none;
-    padding: 1.5rem;
-    font-size: 2.5rem;
+    padding: clamp(1rem, 4vw, 1.5rem);
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
     font-weight: 900;
     border-radius: 1.25rem;
     width: 100%;
@@ -271,12 +241,13 @@ main {
 }
 
 footer {
-    padding: 2rem;
+    padding: clamp(1rem, 4vh, 2rem);
     text-align: center;
     font-size: 0.75rem;
     opacity: 0.7;
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .timestamp {

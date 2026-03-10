@@ -1,7 +1,5 @@
-/**
- * DBCompass - Dublin Bikes Navigation
- * Core Application Logic
- */
+import { getDistance, getBearing } from './math.js';
+import { fetchStations } from './api.js';
 
 // --- Configuration & Constants ---
 const CONFIG = {
@@ -40,20 +38,22 @@ const state = {
 };
 
 // --- DOM Elements ---
-const dom = {
-    needle: document.getElementById('compass-needle'),
-    distanceDisplay: document.getElementById('distance-display'),
-    statusText: document.getElementById('status-text'),
-    stationName: document.getElementById('station-name'),
-    bikesCount: document.getElementById('bikes-count'),
-    standsCount: document.getElementById('stands-count'),
-    overlay: document.getElementById('permission-overlay'),
-    startBtn: document.getElementById('start-btn'),
-    deployTime: document.getElementById('deploy-time')
-};
+let dom = {};
 
 // --- Initialization ---
 function init() {
+    dom = {
+        needle: document.getElementById('compass-needle'),
+        distanceDisplay: document.getElementById('distance-display'),
+        statusText: document.getElementById('status-text'),
+        stationName: document.getElementById('station-name'),
+        bikesCount: document.getElementById('bikes-count'),
+        standsCount: document.getElementById('stands-count'),
+        overlay: document.getElementById('permission-overlay'),
+        startBtn: document.getElementById('start-btn'),
+        deployTime: document.getElementById('deploy-time')
+    };
+
     // Set deployment timestamp on load
     if (window.DEPLOY_TIME) {
         dom.deployTime.innerText = `Last deployed: ${window.DEPLOY_TIME}`;
@@ -75,10 +75,10 @@ async function handleStartTracking() {
     try {
         await requestPermissions();
         startSensors();
-        await fetchStations();
+        await loadStations();
         
         // Refresh data periodically
-        setInterval(fetchStations, CONFIG.refreshIntervalMs);
+        setInterval(loadStations, CONFIG.refreshIntervalMs);
         
         // Start the continuous compass rendering loop
         requestAnimationFrame(renderCompass);
@@ -91,7 +91,7 @@ async function handleStartTracking() {
 // --- Permissions & Sensors ---
 async function requestPermissions() {
     // Request Orientation Permission (iOS 13+)
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         const permission = await DeviceOrientationEvent.requestPermission();
         if (permission !== 'granted') {
             throw new Error('Orientation permission denied');
@@ -121,12 +121,9 @@ function startSensors() {
 }
 
 // --- Data Fetching ---
-async function fetchStations() {
+async function loadStations() {
     try {
-        const url = `https://api.jcdecaux.com/vls/v1/stations?contract=${CONFIG.contractName}&apiKey=${CONFIG.apiKey}`;
-        const response = await fetch(url);
-        state.stations = await response.json();
-        
+        state.stations = await fetchStations(CONFIG.contractName, CONFIG.apiKey);
         if (state.userLocation) {
             calculateNearestStation();
         }
@@ -316,42 +313,5 @@ function renderCompass() {
     requestAnimationFrame(renderCompass);
 }
 
-// --- Math Utilities ---
-
-/**
- * Haversine formula to get distance in meters between two coordinates
- */
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth radius in meters
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-}
-
-/**
- * Calculate bearing (initial heading) in degrees between two coordinates
- */
-function getBearing(lat1, lon1, lat2, lon2) {
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const λ1 = lon1 * Math.PI / 180;
-    const λ2 = lon2 * Math.PI / 180;
-
-    const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
-    const x = Math.cos(φ1) * Math.sin(φ2) -
-              Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
-    const θ = Math.atan2(y, x);
-
-    return (θ * 180 / Math.PI + 360) % 360; // range 0-360
-}
-
 // Boot the application
-window.addEventListener('load', init);
+window.addEventListener('DOMContentLoaded', init);
