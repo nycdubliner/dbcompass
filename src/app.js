@@ -202,6 +202,14 @@ function calculateNearestStation() {
 
     state.nearestStation = closest;
     state.targetDistance = minDistance;
+
+    // Check if the nearest station is too far away (e.g., > 50km)
+    if (minDistance > 50000) {
+        ui.showError('No stations nearby. Are you in Dublin?');
+        ui.stopAnimations();
+        return;
+    }
+
     state.dataReady = true;
     
     updateTargetRotation();
