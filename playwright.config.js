@@ -11,6 +11,7 @@ export default defineConfig({
     headless: true,
     trace: 'on-first-retry',
   },
+  snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{projectName}-{arg}{ext}',
   webServer: {
     command: 'npx serve . -p 3000',
     port: 3000,
