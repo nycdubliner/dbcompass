@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dbcompass-v1';
+const CACHE_NAME = 'dbcompass-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -16,6 +16,8 @@ self.addEventListener('install', (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
+  // Force the waiting service worker to become the active service worker.
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -30,6 +32,8 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Tell the active service worker to take control of the page immediately.
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -38,9 +42,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Network-first strategy with cache fallback
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).then((networkResponse) => {
+      return caches.open(CACHE_NAME).then((cache) => {
+        // Update cache with the fresh network response
+        cache.put(event.request, networkResponse.clone());
+        return networkResponse;
+      });
+    }).catch(() => {
+      // If network fails, return from cache
+      return caches.match(event.request);
     })
   );
 });
