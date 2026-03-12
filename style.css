@@ -77,8 +77,10 @@ main {
 }
 
 #compass-container {
-    width: clamp(200px, 85vmin, 500px);
-    height: clamp(200px, 85vmin, 500px);
+    width: 90vw;
+    height: 90vw;
+    max-width: 500px;
+    max-height: 500px;
     background: radial-gradient(circle, var(--card-bg) 0%, var(--bg-color) 100%);
     border-radius: 50%;
     border: 10px solid var(--card-bg);
@@ -125,7 +127,7 @@ main {
 }
 
 #station-info {
-    width: 90%;
+    width: 90vw;
     max-width: 500px;
     background-color: var(--card-bg);
     padding: clamp(1.5rem, 5vw, 2.5rem);
